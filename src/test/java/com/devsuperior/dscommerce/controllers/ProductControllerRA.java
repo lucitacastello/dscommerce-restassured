@@ -123,7 +123,7 @@ public class ProductControllerRA {
 
     //Problema 3: Inserir produto
     @Test
-    public void insertShouldReturnProductCreatedWhenAdminLogged() {
+    public void insertShouldReturnProductCreatedWhenAdminLogged201() {
         // 1.	Inserção de produto insere produto com dados válidos quando logado como admin
         //converte o objeto postProductInstance em objeto JSON
         JSONObject newProduct = new JSONObject(postProductInstance);  // biblioteca json-simple
@@ -142,6 +142,164 @@ public class ProductControllerRA {
                 .body("price", is(50.0F))
                 .body("imgUrl", equalTo("https://raw.githubusercontent.com/devsuperior/dscatalog-resources/master/backend/img/1-big.jpg"))
                 .body("categories.id", hasItems(2, 3));
+    }
+
+    @Test
+    public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndInvalidName422() {
+        // 2.	Inserção de produto retorna 422 e mensagens customizadas com dados inválidos
+        // quando logado como admin e campo name for inválido
+
+        //atualizando o nome do produto para 2 caracteres
+        postProductInstance.put("name", "ab");
+
+        //converte o objeto postProductInstance em objeto JSON
+        JSONObject newProduct = new JSONObject(postProductInstance);  // biblioteca json-simple
+
+        given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + adminToken)
+                .body(newProduct)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/products")
+                .then()
+                .statusCode(422)
+                .body("errors.message[0]", equalTo("Nome precisar ter de 3 a 80 caracteres"));
+    }
+
+    @Test
+    public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndInvalidDescription422() {
+        // 3.	Inserção de produto retorna 422 e mensagens customizadas com dados inválidos
+        // quando logado como admin e campo description for inválido
+
+        //atualizando
+        postProductInstance.put("description", "Lorem");
+
+        //converte o objeto postProductInstance em objeto JSON
+        JSONObject newProduct = new JSONObject(postProductInstance);  // biblioteca json-simple
+
+        given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + adminToken)
+                .body(newProduct)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/products")
+                .then()
+                .statusCode(422)
+                .body("errors.message[0]", equalTo("Descrição precisa ter no mínimo 10 caracteres"));
+    }
+
+    @Test
+    public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndPriceIsNegative422() {
+        // 4.	Inserção de produto retorna 422 e mensagens customizadas com dados inválidos
+        // quando logado como admin e campo price for negativo
+
+        //atualizando
+        postProductInstance.put("price", -50.0F);
+
+        //converte o objeto postProductInstance em objeto JSON
+        JSONObject newProduct = new JSONObject(postProductInstance);  // biblioteca json-simple
+
+        given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + adminToken)
+                .body(newProduct)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/products")
+                .then()
+                .statusCode(422)
+                .body("errors.message[0]", equalTo("O preço deve ser positivo"));
+    }
+
+    @Test
+    public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndPriceIsZero422() {
+        // 5.	Inserção de produto retorna 422 e mensagens customizadas com dados inválidos
+        // quando logado como admin e campo price for zero
+
+        //atualizando
+        postProductInstance.put("price", 0.0);
+
+        //converte o objeto postProductInstance em objeto JSON
+        JSONObject newProduct = new JSONObject(postProductInstance);  // biblioteca json-simple
+
+        given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + adminToken)
+                .body(newProduct)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/products")
+                .then()
+                .statusCode(422)
+                .body("errors.message[0]", equalTo("O preço deve ser positivo"));
+    }
+
+    @Test
+    public void insertShouldReturnUnprocessableEntityWhenAdminLoggedAndProductHasNoCategory422() {
+        // 6.	Inserção de produto retorna 422 e mensagens customizadas com dados inválidos
+        // quando logado como admin e não tiver categoria associada
+
+        //atualizando
+        postProductInstance.put("categories", null);
+
+        //converte o objeto postProductInstance em objeto JSON
+        JSONObject newProduct = new JSONObject(postProductInstance);  // biblioteca json-simple
+
+        given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + adminToken)
+                .body(newProduct)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/products")
+                .then()
+                .statusCode(422)
+                .body("errors.message[0]", equalTo("Deve ter pelo menos uma categoria"));
+    }
+
+    @Test
+    public void insertShouldReturnForbiddenWhenClientLogged403() {
+        // 7.	Inserção de produto retorna 403 quando logado como cliente
+
+        //converte o objeto postProductInstance em objeto JSON
+        JSONObject newProduct = new JSONObject(postProductInstance);  // biblioteca json-simple
+
+        given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + clientToken)
+                .body(newProduct)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/products")
+                .then()
+                .statusCode(403);
+    }
+
+    @Test
+    public void insertShouldReturnUnauthorizedWhenInvalidToken403() {
+        // 8.	Inserção de produto retorna 401 quando não logado como admin ou cliente
+
+        //converte o objeto postProductInstance em objeto JSON
+        JSONObject newProduct = new JSONObject(postProductInstance);  // biblioteca json-simple
+
+        given()
+                .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + invalidToken)
+                .body(newProduct)
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .post("/products")
+                .then()
+                .statusCode(401);
     }
 
 }
